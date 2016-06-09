@@ -60,7 +60,7 @@ public class PuzzleBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return "226000993:AAGUGJqZWM8d2PHmalo3aHe0gp6ZzC4CQdo";
+        return "";
     }
 
     private Puzzle getRandomPuzzle() {
