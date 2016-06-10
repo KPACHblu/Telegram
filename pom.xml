@@ -10,7 +10,6 @@
     <packaging>jar</packaging>
 
     <repositories>
-
         <repository>
             <id>repo</id>
             <releases>
@@ -24,48 +23,12 @@
         </repository>
     </repositories>
 
-    <properties>
-        <jackson.version>2.6.1</jackson.version>
-        <httpasyncclient.version>4.1</httpasyncclient.version>
-        <slf4j-api.version>1.7.7</slf4j-api.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots</artifactId>
             <version>2.3.3.2</version>
         </dependency>
-
-
-        <!--Dependencies for botan(stats)-->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j-api.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <version>${slf4j-api.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpasyncclient</artifactId>
-            <version>${httpasyncclient.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <!--Dependencies for botan(stats) END -->
     </dependencies>
 
     <build>
