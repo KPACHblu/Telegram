@@ -3,6 +3,8 @@ package org.aub.telegram.bot.puzzle;
 import org.telegram.telegrambots.TelegramApiException;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Update;
+import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 
 import java.util.*;
@@ -30,6 +32,7 @@ public class PuzzleBot extends TelegramLongPollingBot {
             Puzzle puzzle = getRandomPuzzle();
             userToPuzzleMap.put(userId, puzzle);
             sendMessage.setText(puzzle.getQuestion());
+            sendMessage.setReplayMarkup(getReplyKeyboardMarkup());
         } else {
             Puzzle puzzle = userToPuzzleMap.get(userId);
             if (puzzle != null) {
@@ -43,6 +46,7 @@ public class PuzzleBot extends TelegramLongPollingBot {
                 puzzle = getRandomPuzzle();
                 userToPuzzleMap.put(userId, puzzle);
                 sendMessage.setText(puzzle.getQuestion());
+                sendMessage.setReplayMarkup(getReplyKeyboardMarkup());
             }
         }
         sendMessage.setChatId(String.valueOf(update.getMessage().getFrom().getId()));
@@ -60,11 +64,31 @@ public class PuzzleBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return "";
+        return "226000993:AAGUGJqZWM8d2PHmalo3aHe0gp6ZzC4CQdo";
     }
 
     private Puzzle getRandomPuzzle() {
         return allPuzzles.get(random.nextInt(allPuzzles.size()));
+    }
+
+    private ReplyKeyboardMarkup getReplyKeyboardMarkup() {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboad(false);
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        KeyboardRow keyboardRow = new KeyboardRow();
+        keyboardRow.add("Тест 1");
+        keyboardRow.add("Тест 2");
+        keyboard.add(keyboardRow);
+        keyboardRow = new KeyboardRow();
+        keyboardRow.add("Тест 3");
+        keyboardRow.add("Тест 4");
+        keyboard.add(keyboardRow);
+
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        return replyKeyboardMarkup;
     }
 }
 
