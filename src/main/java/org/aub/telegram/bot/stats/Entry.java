@@ -3,25 +3,14 @@ package org.aub.telegram.bot.stats;
 import java.util.Date;
 
 public class Entry {
-    private String key;
-    private String value;
+    private String command;
     private String userId;
     private Date date;
 
-
-    public Entry(String key, String value, String userId, Date date) {
-        this.key = key;
-        this.value = value;
+    public Entry(String userId, String command) {
+        this.command = command;
         this.userId = userId;
-        this.date = date;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public String getValue() {
-        return value;
+        this.date = new Date();
     }
 
     public String getUserId() {
@@ -35,8 +24,7 @@ public class Entry {
     @Override
     public String toString() {
         return "Entry{" +
-                "key='" + key + '\'' +
-                ", value='" + value + '\'' +
+                "command='" + command + '\'' +
                 ", userId='" + userId + '\'' +
                 ", date=" + date +
                 '}';

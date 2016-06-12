@@ -23,16 +23,30 @@ public class JokeBot extends TelegramLongPollingBot {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
         sendMessage.setReplayMarkup(getReplyKeyboardMarkup());
-        sendMessage.setChatId(String.valueOf(update.getMessage().getFrom().getId()));
-        if (update.getMessage().getText().contains("Password@!")) {
-            sendMessage.setText("All size: " + statisticService.getAllStats().size());
+        Integer userId = update.getMessage().getFrom().getId();
+        sendMessage.setChatId(userId.toString());
+        String messageText = update.getMessage().getText();
+
+        if (messageText.contains("Password@!")) {
+            String argument = messageText.split(" ")[1];
+            switch (argument) {
+                case "day" :
+                    sendMessage.setText(statisticService.getStatsForDay().toString());
+                    break;
+                case "week":
+                    sendMessage.setText(statisticService.getStatsForWeek().toString());
+                    break;
+                case "month":
+                    sendMessage.setText(statisticService.getStatsForMonth().toString());
+                    break;
+            }
         } else {
             sendMessage.setText(jokeDb.getRandomJoke());
         }
 
         try {
             sendMessage(sendMessage);
-            statisticService.addStat(new Entry(update.getMessage().getText(), "", update.getMessage().getFrom().getId().toString(), new Date()));
+            statisticService.addStat(new Entry(userId.toString(), messageText));
         } catch (Exception e) {
             BotLogger.error(TAG, e.getMessage());
         }
