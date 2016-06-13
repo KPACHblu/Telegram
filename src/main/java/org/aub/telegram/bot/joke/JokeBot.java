@@ -20,36 +20,11 @@ public class JokeBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.enableMarkdown(true);
-        sendMessage.setReplayMarkup(getReplyKeyboardMarkup());
-        Integer userId = update.getMessage().getFrom().getId();
-        sendMessage.setChatId(userId.toString());
-        String messageText = update.getMessage().getText();
-
-        if (messageText.contains("Password@!")) {
-            String argument = messageText.split(" ")[1];
-            switch (argument) {
-                case "day" :
-                    sendMessage.setText(statisticService.getStatsForDay().toString());
-                    break;
-                case "week":
-                    sendMessage.setText(statisticService.getStatsForWeek().toString());
-                    break;
-                case "month":
-                    sendMessage.setText(statisticService.getStatsForMonth().toString());
-                    break;
-            }
-        } else {
-            sendMessage.setText(jokeDb.getRandomJoke());
+        if (statisticService.sendStatisticIfNeeded(update, this)) {
+            return;
         }
+        sendJoke(update.getMessage().getFrom().getId());
 
-        try {
-            sendMessage(sendMessage);
-            statisticService.addStat(new Entry(userId.toString(), messageText));
-        } catch (Exception e) {
-            BotLogger.error(TAG, e.getMessage());
-        }
     }
 
     @Override
@@ -62,6 +37,18 @@ public class JokeBot extends TelegramLongPollingBot {
         return "224600281:AAFvaW9oMwl23qXcXfGWoeKLeSVwJmrq_xM";
     }
 
+    private void sendJoke(Integer userId) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setReplayMarkup(getReplyKeyboardMarkup());
+        sendMessage.setChatId(String.valueOf(userId));
+        sendMessage.setText(jokeDb.getRandomJoke());
+        try {
+            sendMessage(sendMessage);
+        } catch (Exception e) {
+            BotLogger.error(TAG, e.getMessage());
+        }
+    }
     private ReplyKeyboardMarkup getReplyKeyboardMarkup() {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setSelective(true);
