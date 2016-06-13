@@ -1,6 +1,5 @@
 package org.aub.telegram.bot.joke;
 
-import org.aub.telegram.bot.stats.Entry;
 import org.aub.telegram.bot.stats.StatisticService;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Update;
@@ -10,7 +9,6 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.logging.BotLogger;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class JokeBot extends TelegramLongPollingBot {
