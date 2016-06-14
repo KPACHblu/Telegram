@@ -7,24 +7,27 @@ import java.util.Random;
 
 public class AphorismDao {
     private static final String TAG = "AphorismDao";
+    //Relative path of resource folder
     private static final String BOT_RESOURCE_FOLDER = "resources/aphorism-bot/";
+    private static final String OPENSHIFT_REPO_DIR_VAR = "OPENSHIFT_REPO_DIR";
+    private static final String OPENSHIFT_REPO_DIY_FOLDER = "diy/";
     private Random random = new Random();
+    private String imageFolderPath;
     private String[] allImages;
 
     public AphorismDao() {
-        allImages = getAllFileNames();
+        //Get absolute path to image folder
+        imageFolderPath = getOpenshiftRepoDirPath() + BOT_RESOURCE_FOLDER;
+        allImages = getAllFileNames(imageFolderPath);
         BotLogger.info(TAG, "All image files a loaded. Size:" + allImages.length);
     }
 
     public String getRandomImagePath() {
-        return BOT_RESOURCE_FOLDER + allImages[random.nextInt(allImages.length - 1)];
+        return imageFolderPath + allImages[random.nextInt(allImages.length - 1)];
     }
 
-    private String[] getAllFileNames() {
-        File imageFolder = new File(BOT_RESOURCE_FOLDER);
-        System.out.println("Image Folder read:"+imageFolder.canRead());
-        File[] listOfFiles = imageFolder.listFiles();
-        System.out.println("!!!:"+listOfFiles);
+    private String[] getAllFileNames(String path) {
+        File[] listOfFiles = new File(path).listFiles();
         String[] result = new String[listOfFiles.length];
 
         for (int i = 0; i < listOfFiles.length; i++) {
@@ -34,4 +37,10 @@ public class AphorismDao {
         }
         return result;
     }
+
+    private String getOpenshiftRepoDirPath() {
+        String envVar = System.getenv(OPENSHIFT_REPO_DIR_VAR);
+        return envVar != null ? envVar + OPENSHIFT_REPO_DIY_FOLDER : "";
+    }
+
 }

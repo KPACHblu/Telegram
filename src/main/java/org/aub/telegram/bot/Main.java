@@ -14,7 +14,7 @@ public class Main {
     public static void main(String[] args) {
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
         try {
-//            telegramBotsApi.registerBot(new AphorismBot());
+            telegramBotsApi.registerBot(new AphorismBot());
             telegramBotsApi.registerBot(new JokeBot());
             BotLogger.info(TAG, "Bots are registered");
         } catch (Exception e) {

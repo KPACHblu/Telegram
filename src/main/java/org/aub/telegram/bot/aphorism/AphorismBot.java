@@ -58,7 +58,7 @@ public class AphorismBot extends TelegramLongPollingBot {
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow keyboardRow = new KeyboardRow();
         //TODO fix
-        keyboardRow.add("Следующий");
+        keyboardRow.add("Next");
         keyboard.add(keyboardRow);
 
         replyKeyboardMarkup.setKeyboard(keyboard);
