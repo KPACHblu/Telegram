@@ -1,5 +1,6 @@
 package org.aub.telegram.bot;
 
+import org.aub.telegram.bot.alias.AliasBot;
 import org.aub.telegram.bot.aphorism.AphorismBot;
 import org.aub.telegram.bot.joke.JokeBot;
 import org.telegram.telegrambots.TelegramApiException;
@@ -14,8 +15,9 @@ public class Main {
     public static void main(String[] args) {
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
         try {
-            telegramBotsApi.registerBot(new AphorismBot());
-            telegramBotsApi.registerBot(new JokeBot());
+//            telegramBotsApi.registerBot(new AphorismBot());
+//            telegramBotsApi.registerBot(new JokeBot());
+            telegramBotsApi.registerBot(new AliasBot());
             BotLogger.info(TAG, "Bots are registered");
         } catch (Exception e) {
             BotLogger.error(TAG, "Can't register bots", e);

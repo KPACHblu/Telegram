@@ -1,23 +1,29 @@
 package org.aub.telegram.bot.alias;
 
 import org.aub.telegram.bot.stats.StatisticService;
+import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Update;
+import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.logging.BotLogger;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.*;
 
 public class AliasBot extends TelegramLongPollingBot {
     private static final String TAG = "AliasBot";
+    private static final String COMMAND_START_GAME = "Start Game";
+
     private StatisticService statisticService = new StatisticService();
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private Map<Integer, Game> userToGame = new HashMap<>();
+    private Random random = new Random();
 
     @Override
     public void onUpdateReceived(Update update) {
         if (statisticService.sendStatisticIfNeeded(update, this)) {
             return;
         }
-        sendSome();
+        sendSome(update);
     }
 
     @Override
@@ -30,15 +36,237 @@ public class AliasBot extends TelegramLongPollingBot {
         return "122934009:AAHEM7mI69BojtIsVrg6kyD7lDaDTrmdQh4";
     }
 
-    private void sendSome() {
+    private void sendSome(Update update) {
+        String messageText = update.getMessage().getText();
+        Integer userId = update.getMessage().getFrom().getId();
+        if (messageText.equalsIgnoreCase(COMMAND_START_GAME)) {
+            userToGame.put(userId, new Game());
+            sendTeamNumber(userId);
+            return;
+        }
+        if (isNumeric(messageText)) {
+            Game game = userToGame.get(userId);
+            if (game != null) {
+                int teamsNumber = Integer.parseInt(messageText);
+                game.addNewTeams(teamsNumber);
+                sendReadyForTeam(userId, game.getCurrentTeam().getName());
+                return;
+            } else {
+                //TODO
+            }
+        }
+        if ("go".equalsIgnoreCase(messageText)) {
+            Game game = userToGame.get(userId);
+            if (game != null) {
+                sendWord(userId);
+                game.startNewRound();
+            }
+            return;
+        }
+        if ("skip".equalsIgnoreCase(messageText)) {
+            Game game = userToGame.get(userId);
+            if (game != null) {
+                if(!game.isCurrentRoundFinished()) {
+                    sendWord(userId);
+                } else {
+                    sendTimeOver(userId);
+                }
+            }
+            return;
+        }
+        if ("correct".equalsIgnoreCase(messageText)) {
+            Game game = userToGame.get(userId);
+            if (game != null) {
+                if (!game.isCurrentRoundFinished()) {
+                    addPointToTeam(userId);
+                    sendWord(userId);
+                } else {
+                    sendTimeOver(userId);
+                }
+            }
+            return;
+        }
+
+        if ("Next Round".equalsIgnoreCase(messageText)) {
+            Game game = userToGame.get(userId);
+            if (game != null) {
+                //TODO fix
+                game.changeTeam();
+                sendReadyForTeam(userId, game.getCurrentTeam().getName());
+            }
+        }
+
+        sendMenu(userId);
+    }
+
+    private void sendTimeOver(Integer userId) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setReplayMarkup(getNextRoundKeyboardMarkup());
+        sendMessage.setChatId(String.valueOf(userId));
+        Game game = userToGame.get(userId);
+        sendMessage.setText("<b>Time is over</b></br>"+game.getCurrentTeam().getName()+" has <b>"+game.getCurrentTeam().getPoints()+" points!</b>");
+        try {
+            sendMessage(sendMessage);
+        } catch (Exception e) {
+            BotLogger.error(TAG, e.getMessage());
+        }
 
     }
 
-    private static class TimerJob implements Runnable {
-
-        @Override
-        public void run() {
-
+    private void sendMenu(Integer userId) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setReplayMarkup(getStartGameKeyboardMarkup());
+        sendMessage.setChatId(String.valueOf(userId));
+        sendMessage.setText("Let's play?");
+        try {
+            sendMessage(sendMessage);
+        } catch (Exception e) {
+            BotLogger.error(TAG, e.getMessage());
         }
     }
+
+    private void addPointToTeam(Integer userId) {
+        Game game = userToGame.get(userId);
+        if (game != null) {
+            Team currentTeam = game.getCurrentTeam();
+            currentTeam.setPoints(currentTeam.getPoints() + 1);
+        }
+    }
+
+    private void sendWord(Integer userId) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setReplayMarkup(getSkipAndCorrectKeyboardMarkup());
+        sendMessage.setChatId(String.valueOf(userId));
+        sendMessage.setText(getRandomWord());
+        try {
+            sendMessage(sendMessage);
+        } catch (Exception e) {
+            BotLogger.error(TAG, e.getMessage());
+        }
+    }
+
+
+    private void sendReadyForTeam(Integer userId, String teamName) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setReplayMarkup(getGoKeyboardMarkup());
+        sendMessage.setChatId(String.valueOf(userId));
+        sendMessage.setText(teamName + ", are you ready?");
+        try {
+            sendMessage(sendMessage);
+        } catch (Exception e) {
+            BotLogger.error(TAG, e.getMessage());
+        }
+    }
+
+
+    private void sendTeamNumber(Integer userId) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setReplayMarkup(getReplyKeyboardMarkup());
+        sendMessage.setChatId(String.valueOf(userId));
+        sendMessage.setText("How many teams?");
+        try {
+            sendMessage(sendMessage);
+        } catch (Exception e) {
+            BotLogger.error(TAG, e.getMessage());
+        }
+    }
+
+    private ReplyKeyboardMarkup getReplyKeyboardMarkup() {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboad(false);
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        KeyboardRow keyboardRow = new KeyboardRow();
+        keyboardRow.add("1");
+        keyboardRow.add("2");
+        keyboardRow.add("3");
+        keyboard.add(keyboardRow);
+        keyboardRow = new KeyboardRow();
+        keyboardRow.add("4");
+        keyboardRow.add("5");
+        keyboardRow.add("6");
+        keyboard.add(keyboardRow);
+
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        return replyKeyboardMarkup;
+    }
+
+    private ReplyKeyboardMarkup getGoKeyboardMarkup() {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboad(false);
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        KeyboardRow keyboardRow = new KeyboardRow();
+        keyboardRow.add("Go");
+        keyboard.add(keyboardRow);
+
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        return replyKeyboardMarkup;
+    }
+
+    private ReplyKeyboardMarkup getSkipAndCorrectKeyboardMarkup() {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboad(false);
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        KeyboardRow keyboardRow = new KeyboardRow();
+        keyboardRow.add("Skip");
+        keyboardRow.add("Correct");
+        keyboard.add(keyboardRow);
+
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        return replyKeyboardMarkup;
+    }
+
+    private ReplyKeyboardMarkup getStartGameKeyboardMarkup() {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboad(false);
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        KeyboardRow keyboardRow = new KeyboardRow();
+        keyboardRow.add("Start Game");
+        keyboard.add(keyboardRow);
+
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        return replyKeyboardMarkup;
+    }
+
+    private ReplyKeyboardMarkup getNextRoundKeyboardMarkup() {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboad(false);
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        KeyboardRow keyboardRow = new KeyboardRow();
+        keyboardRow.add("Next Round");
+        keyboard.add(keyboardRow);
+
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        return replyKeyboardMarkup;
+    }
+
+    private static boolean isNumeric(String maybeNumeric) {
+        return maybeNumeric != null && maybeNumeric.matches("[0-9]+");
+    }
+
+    public String getRandomWord() {
+        return allWords[random.nextInt(allWords.length - 1)];
+    }
+
+    private String[] allWords = {"Сено", "Якорь", "Автомобиль", "Столица", "Чудо", "Улитка", "Черепаха"};
+
 }
