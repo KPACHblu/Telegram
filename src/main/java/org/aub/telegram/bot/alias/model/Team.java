@@ -1,14 +1,18 @@
-package org.aub.telegram.bot.alias;
+package org.aub.telegram.bot.alias.model;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Team {
     private int id;
     private String name;
     private int points;
-    private int rounds;
+    private List<Round> rounds;
 
     public Team(int id, String name) {
         this.id = id;
         this.name = name;
+        rounds = new ArrayList<>();
     }
 
     public int getId() {
@@ -35,11 +39,15 @@ public class Team {
         this.points = points;
     }
 
-    public int getRounds() {
+    public List<Round> getRounds() {
         return rounds;
     }
 
-    public void setRounds(int rounds) {
+    public Round getLastRound() {
+        return rounds.get(rounds.size() - 1);
+    }
+
+    public void setRounds(List<Round> rounds) {
         this.rounds = rounds;
     }
 

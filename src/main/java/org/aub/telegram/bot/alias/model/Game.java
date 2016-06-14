@@ -1,42 +1,40 @@
-package org.aub.telegram.bot.alias;
+package org.aub.telegram.bot.alias.model;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 
 public class Game {
-    private int currentRound;
     private Team currentTeam;
-    private Date currentRoundStart;
     private Team[] teams;
 
     public void addNewTeams(int numberOfTeams) {
         teams = new Team[numberOfTeams];
         for (int i = 0; i < numberOfTeams; i++) {
-            teams[i] = new Team(i + 1, "Team " + i + 1);
+            teams[i] = new Team(i, "Team " + (i + 1));
         }
         currentTeam = teams[0];
     }
 
     public void startNewRound() {
-        currentRoundStart = new Date();
+        currentTeam.getRounds().add(new Round());
     }
 
     public boolean isCurrentRoundFinished() {
-        return Duration.between(currentRoundStart.toInstant(), Instant.now()).toMillis() > 60000;
+        return Duration.between(currentTeam.getLastRound().getStartedAt().toInstant(), Instant.now()).toMillis() > 10000;
     }
 
     public Team getCurrentTeam() {
         return currentTeam;
     }
 
-    //TODO
     public void changeTeam() {
-        for (int i=0; i<teams.length; i++) {
-            if (teams[i].getRounds() < currentRound) {
-                currentTeam = teams[i];
-                break;
-            }
+        int id = currentTeam.getId();
+        //If current team is the last - choose the first
+        if (id == teams.length - 1) {
+            currentTeam = teams[0];
+        } else {
+            currentTeam = teams[id + 1];
         }
     }
 
