@@ -13,7 +13,7 @@ import java.util.List;
 
 public class JokeBot extends TelegramLongPollingBot {
     private static final String TAG = "JokeBot";
-    private JokeDb jokeDb = new JokeDb();
+    private JokeDao jokeDao = new JokeDao();
     private StatisticService statisticService = new StatisticService();
 
     @Override
@@ -40,7 +40,7 @@ public class JokeBot extends TelegramLongPollingBot {
         sendMessage.enableMarkdown(true);
         sendMessage.setReplayMarkup(getReplyKeyboardMarkup());
         sendMessage.setChatId(String.valueOf(userId));
-        sendMessage.setText(jokeDb.getRandomJoke());
+        sendMessage.setText(jokeDao.getRandomJoke());
         try {
             sendMessage(sendMessage);
         } catch (Exception e) {

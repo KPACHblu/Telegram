@@ -2,10 +2,11 @@ package org.aub.telegram.bot.alias.model;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Round {
-    private Map<String, Boolean> wordToResult = new HashMap<>(); //key - question; value - is question was answered?
+    private Map<String, Boolean> wordToResult = new LinkedHashMap<>(); //key - question; value - is question was answered?
     private String lastAskedWord;
     private Date startedAt;
 

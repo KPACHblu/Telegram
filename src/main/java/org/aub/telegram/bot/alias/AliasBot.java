@@ -20,7 +20,7 @@ public class AliasBot extends TelegramLongPollingBot {
 
     private StatisticService statisticService = new StatisticService();
     private Map<Integer, Game> userToGame = new HashMap<>();
-    private Random random = new Random();
+    private AliasDao aliasDao = new AliasDao();
 
     @Override
     public void onUpdateReceived(Update update) {
@@ -161,7 +161,7 @@ public class AliasBot extends TelegramLongPollingBot {
         sendMessage.setReplayMarkup(getSkipAndCorrectKeyboardMarkup());
         sendMessage.setChatId(String.valueOf(userId));
         Game game = userToGame.get(userId);
-        String randomWord = getRandomWord();
+        String randomWord = aliasDao.getRandomWord();
         game.getCurrentTeam().getLastRound().setLastAskedWord(randomWord);
         sendMessage.setText(randomWord);
         try {
@@ -285,11 +285,5 @@ public class AliasBot extends TelegramLongPollingBot {
     private static boolean isNumeric(String maybeNumeric) {
         return maybeNumeric != null && maybeNumeric.matches("[0-9]+");
     }
-
-    public String getRandomWord() {
-        return allWords[random.nextInt(allWords.length - 1)];
-    }
-
-    private String[] allWords = {"Сено", "Якорь", "Автомобиль", "Столица", "Чудо", "Улитка", "Черепаха"};
 
 }

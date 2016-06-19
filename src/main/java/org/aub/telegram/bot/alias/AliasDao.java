@@ -1,21 +1,24 @@
-package org.aub.telegram.bot.joke;
+package org.aub.telegram.bot.alias;
 
 import org.telegram.telegrambots.logging.BotLogger;
 
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.Scanner;
 
-public class JokeDb {
-    private static final String TAG = "JokeBot";
+public class AliasDao {
+    private static final String TAG = "AliasDao";
     private Random random = new Random();
     private String[] allJokes;
 
-    public JokeDb() {
-        String file = getFile("joke-bot/jokes.txt");
-        allJokes = file.split("\n\n");
-        BotLogger.info(TAG, "Initialization of DB is done");
+    public AliasDao() {
+        String file = getFile("alias-bot/words.txt");
+        allJokes = file.split("\n");
+        BotLogger.info(TAG, "Initialization of DB is done. Size: " + allJokes.length);
+    }
+
+    public String getRandomWord() {
+        return allJokes[random.nextInt(allJokes.length - 1)];
     }
 
     private String getFile(String fileName) {
@@ -29,9 +32,5 @@ public class JokeDb {
             scanner.close();
         }
         return result.toString();
-    }
-
-    public String getRandomJoke() {
-        return allJokes[random.nextInt(allJokes.length - 1)];
     }
 }
