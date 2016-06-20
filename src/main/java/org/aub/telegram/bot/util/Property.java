@@ -1,7 +1,6 @@
 package org.aub.telegram.bot.util;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.text.MessageFormat;
 import java.util.Properties;
 
@@ -12,7 +11,8 @@ public class Property {
         InputStream inputStream = Property.class.getClassLoader().getResourceAsStream(propertyFile);
         if (inputStream != null) {
             try {
-                properties.load(inputStream);
+                InputStreamReader isr = new InputStreamReader(inputStream, "UTF-8");
+                properties.load(isr);
             } catch (IOException e) {
                 throw new RuntimeException("Can't load properties");
             }
@@ -25,13 +25,8 @@ public class Property {
         return properties.getProperty(key);
     }
 
-    public String getProperty(String key, String defaultValue) {
-        return properties.getProperty(key, defaultValue);
-    }
-
     public String getPropertyParam(String key, Object... params) {
         return MessageFormat.format(properties.getProperty(key), params);
-
     }
 
 }

@@ -44,6 +44,9 @@ public class Team {
     }
 
     public Round getLastRound() {
+        if (rounds.isEmpty()) {
+            return null;
+        }
         return rounds.get(rounds.size() - 1);
     }
 

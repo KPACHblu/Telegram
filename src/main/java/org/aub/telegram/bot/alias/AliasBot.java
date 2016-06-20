@@ -3,6 +3,7 @@ package org.aub.telegram.bot.alias;
 import org.aub.telegram.bot.alias.model.Game;
 import org.aub.telegram.bot.alias.model.Round;
 import org.aub.telegram.bot.alias.model.Team;
+import org.aub.telegram.bot.alias.util.StringUtil;
 import org.aub.telegram.bot.stats.StatisticService;
 import org.aub.telegram.bot.util.Property;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
@@ -18,16 +19,22 @@ import java.util.*;
 
 public class AliasBot extends TelegramLongPollingBot {
     private static final String TAG = "AliasBot";
-    private static final String COMMAND_START_GAME = "Start Game";
-    private static final String COMMAND_GO = "go";
-    private static final String COMMAND_SKIP = "skip";
-    private static final String COMMAND_CORRECT = "correct";
-    private static final String COMMAND_NEXT_ROUND = "Next Round";
+    private String COMMAND_START_GAME;
+    private String COMMAND_GO;
+    private String COMMAND_SKIP;
+    private String COMMAND_CORRECT;
+    private String COMMAND_NEXT_ROUND;
+    private String COMMAND_FINISH_GAME;
 
     private StatisticService statisticService = new StatisticService();
     private Map<Integer, Game> userToGame = new HashMap<>();
     private AliasDao aliasDao = new AliasDao();
-    private Property lang = new Property("alias-bot/lang_en.properties");
+    private Property lang;
+
+    public AliasBot() {
+        lang = new Property("alias-bot/lang_ru.properties");
+        initCommands();
+    }
 
     @Override
     public void onUpdateReceived(Update update) {
@@ -47,11 +54,20 @@ public class AliasBot extends TelegramLongPollingBot {
         return "122934009:AAHEM7mI69BojtIsVrg6kyD7lDaDTrmdQh4";
     }
 
+    private void initCommands() {
+        COMMAND_START_GAME = lang.getProperty("button.startGame");
+        COMMAND_GO = lang.getProperty("button.go");
+        COMMAND_SKIP = lang.getProperty("button.skip");
+        COMMAND_CORRECT = lang.getProperty("button.correct");
+        COMMAND_NEXT_ROUND = lang.getProperty("button.nextRound");
+        COMMAND_FINISH_GAME = lang.getProperty("button.finishGame");
+    }
+
     private void sendSome(Update update) {
         String messageText = update.getMessage().getText();
         Integer userId = update.getMessage().getFrom().getId();
         // Start new game
-        if (messageText.equalsIgnoreCase(COMMAND_START_GAME)) {
+        if (COMMAND_START_GAME.equalsIgnoreCase(messageText)) {
             userToGame.put(userId, new Game());
             sendTeamNumber(userId);
             return;
@@ -61,7 +77,12 @@ public class AliasBot extends TelegramLongPollingBot {
             Game game = userToGame.get(userId);
             if (game != null) {
                 int teamsNumber = Integer.parseInt(messageText);
-                game.addNewTeams(teamsNumber);
+                String[] teamNames = new String[teamsNumber];
+                String teamBaseName = lang.getProperty("menu.team");
+                for (int i=0; i<teamsNumber; i++) {
+                    teamNames[i] = teamBaseName +" " + (i+1);
+                }
+                game.addNewTeams(teamNames);
                 sendReadyForTeam(userId, game.getCurrentTeam().getName());
                 return;
             } else {
@@ -79,9 +100,10 @@ public class AliasBot extends TelegramLongPollingBot {
         if (COMMAND_SKIP.equalsIgnoreCase(messageText)) {
             Game game = userToGame.get(userId);
             if (game != null) {
+                decreasePointFromTeam(userId);
+                Round lastRound = game.getCurrentTeam().getLastRound();
+                lastRound.getWordToResult().put(lastRound.getLastAskedWord(), false);
                 if(!game.isCurrentRoundFinished()) {
-                    Round lastRound = game.getCurrentTeam().getLastRound();
-                    lastRound.getWordToResult().put(lastRound.getLastAskedWord(), false);
                     sendWord(userId);
                 } else {
                     sendTimeOver(userId);
@@ -92,10 +114,10 @@ public class AliasBot extends TelegramLongPollingBot {
         if (COMMAND_CORRECT.equalsIgnoreCase(messageText)) {
             Game game = userToGame.get(userId);
             if (game != null) {
+                addPointToTeam(userId);
+                Round lastRound = game.getCurrentTeam().getLastRound();
+                lastRound.getWordToResult().put(lastRound.getLastAskedWord(), true);
                 if (!game.isCurrentRoundFinished()) {
-                    addPointToTeam(userId);
-                    Round lastRound = game.getCurrentTeam().getLastRound();
-                    lastRound.getWordToResult().put(lastRound.getLastAskedWord(), true);
                     sendWord(userId);
                 } else {
                     sendTimeOver(userId);
@@ -118,7 +140,16 @@ public class AliasBot extends TelegramLongPollingBot {
             return;
         }
 
-        sendMenu(userId);
+        if (COMMAND_FINISH_GAME.equalsIgnoreCase(messageText)) {
+            Game game = userToGame.get(userId);
+            if (game != null) {
+                userToGame.remove(userId);
+                sendStartGame(userId);
+            }
+            return;
+        }
+
+        sendStartGame(userId);
     }
 
     private void sendMessage(String message, Integer userId, ReplyKeyboard keyboard) {
@@ -137,38 +168,36 @@ public class AliasBot extends TelegramLongPollingBot {
     private void sendTimeOver(Integer userId) {
         Game game = userToGame.get(userId);
         Map<String, Boolean> questionToResult = game.getCurrentTeam().getLastRound().getWordToResult();
-        StringBuilder sb = new StringBuilder(lang.getProperty("menu.yourResultIs")+"\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append(StringUtil.STYLE_BOLD_START).append(lang.getProperty("menu.timeIsOver")).append(StringUtil.STYLE_BOLD_END).append(StringUtil.NEXT_LINE).append(StringUtil.NEXT_LINE);
+        String trueSign = byteToString(new byte[]{(byte)0xE2, (byte)0x9C, (byte)0x85});
+        String falseSign = byteToString(new byte[]{(byte)0xE2, (byte)0x9D, (byte)0x8E});
+
         for (Map.Entry<String, Boolean> entry: questionToResult.entrySet()) {
-            sb.append(entry.getKey()).append(" - ").append(entry.getValue()).append("\n");
-
+            sb.append(entry.getValue()? trueSign : falseSign).append(" ").append(entry.getKey()).append(StringUtil.NEXT_LINE);
         }
-        sb.append("\n<b>");
-        sb.append(lang.getPropertyParam("menu.yourScore", game.getCurrentTeam().getPoints()));
-        sb.append("</b>");
-        String message = "<b>"+lang.getProperty("menu.timeIsOver")+"</b>\n" + sb.toString();
+        sb.append(StringUtil.NEXT_LINE).append(StringUtil.STYLE_BOLD_START);
+        sb.append(lang.getPropertyParam("menu.yourScore", game.getCurrentTeam().getPoints())).append(StringUtil.STYLE_BOLD_END);
 
-        sendMessage(message, userId, getNextRoundKeyboardMarkup());
+        sendMessage(sb.toString(), userId, getNextRoundKeyboardMarkup());
     }
 
     private void sendWinMessage(Integer userId) {
         Game game = userToGame.get(userId);
         List<Team> winners = game.getWinners();
-        StringBuilder message = new StringBuilder();
+        StringBuilder message = new StringBuilder(byteToString(new byte[]{(byte)0xF0, (byte)0x9F, (byte)0x8F, (byte)0x81}));
         if (winners.size() == 1) {
-            message.append(lang.getPropertyParam("menu.theWinnerIs", winners.get(0).getName()));
-            message.append("\n");
-            message.append(winners.get(0).getName());
-            message.append(" - ");
-            message.append(lang.getPropertyParam("menu.numberOfPoints", winners.get(0).getPoints()));
+            message.append(lang.getPropertyParam("menu.theWinnerIs")).append(StringUtil.NEXT_LINE);
+            message.append(StringUtil.STYLE_BOLD_START).append(winners.get(0).getName());
+            message.append(StringUtil.HYPHEN).append(lang.getPropertyParam("menu.numberOfPoints", winners.get(0).getPoints())).append(StringUtil.STYLE_BOLD_END);
 
         } else {
             message.append(lang.getProperty("menu.theWinnersAre"));
-            message.append("\n");
+            message.append(StringUtil.NEXT_LINE);
             for (Team current : winners) {
-                message.append(current.getName());
-                message.append(" - ");
+                message.append(StringUtil.STYLE_BOLD_START).append(current.getName()).append(StringUtil.HYPHEN);
                 message.append(lang.getPropertyParam("menu.numberOfPoints", current.getPoints()));
-                message.append("\n");
+                message.append(StringUtil.STYLE_BOLD_END).append(StringUtil.NEXT_LINE);
             }
         }
         userToGame.remove(userId);
@@ -176,10 +205,9 @@ public class AliasBot extends TelegramLongPollingBot {
 
     }
 
-    private void sendMenu(Integer userId) {
+    private void sendStartGame(Integer userId) {
         byte[] emojiBytes = new byte[]{(byte)0xF0, (byte)0x9F, (byte)0x8E, (byte)0xB2};
-        String emojiAsString = new String(emojiBytes, Charset.forName("UTF-8"));
-        String message = emojiAsString + lang.getProperty("menu.letsPlay");
+        String message = byteToString(emojiBytes) + lang.getProperty("menu.letsPlay");
 
         sendMessage(message, userId, getStartGameKeyboardMarkup());
     }
@@ -189,6 +217,14 @@ public class AliasBot extends TelegramLongPollingBot {
         if (game != null) {
             Team currentTeam = game.getCurrentTeam();
             currentTeam.setPoints(currentTeam.getPoints() + 1);
+        }
+    }
+
+    private void decreasePointFromTeam(Integer userId) {
+        Game game = userToGame.get(userId);
+        if (game != null) {
+            Team currentTeam = game.getCurrentTeam();
+            currentTeam.setPoints(currentTeam.getPoints() - 1);
         }
     }
 
@@ -247,6 +283,7 @@ public class AliasBot extends TelegramLongPollingBot {
 
     private ReplyKeyboardMarkup getNextRoundKeyboardMarkup() {
         KeyboardRow keyboardRow = new KeyboardRow();
+        keyboardRow.add(lang.getProperty("button.finishGame"));
         keyboardRow.add(lang.getProperty("button.nextRound"));
 
         return getKeyBoardMarkup(Arrays.asList(keyboardRow));
@@ -265,6 +302,10 @@ public class AliasBot extends TelegramLongPollingBot {
 
     private static boolean isNumeric(String maybeNumeric) {
         return maybeNumeric != null && maybeNumeric.matches("[0-9]+");
+    }
+
+    private static String byteToString(byte[] bytes) {
+        return new String(bytes, Charset.forName("UTF-8"));
     }
 
 }

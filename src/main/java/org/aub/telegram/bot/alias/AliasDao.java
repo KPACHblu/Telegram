@@ -12,7 +12,7 @@ public class AliasDao {
     private String[] allJokes;
 
     public AliasDao() {
-        String file = getFile("alias-bot/words.txt");
+        String file = getFile("alias-bot/words_ru.txt");
         allJokes = file.split("\n");
         BotLogger.info(TAG, "Initialization of DB is done. Size: " + allJokes.length);
     }

@@ -7,15 +7,15 @@ import java.util.Date;
 import java.util.List;
 
 public class Game {
-    private static final int ROUND_TIME_IN_MILLIS = 5000;
-    private static final int POINTS_FOR_WIN = 10;
+    private static final int ROUND_TIME_IN_MILLIS = 60000;
+    private static final int POINTS_FOR_WIN = 30;
     private Team currentTeam;
     private Team[] teams;
 
-    public void addNewTeams(int numberOfTeams) {
-        teams = new Team[numberOfTeams];
-        for (int i = 0; i < numberOfTeams; i++) {
-            teams[i] = new Team(i, "Team " + (i + 1));
+    public void addNewTeams(String[] teamNames) {
+        teams = new Team[teamNames.length];
+        for (int i = 0; i < teamNames.length; i++) {
+            teams[i] = new Team(i, teamNames[i]);
         }
         currentTeam = teams[0];
     }
@@ -25,7 +25,10 @@ public class Game {
     }
 
     public boolean isCurrentRoundFinished() {
-        return Duration.between(currentTeam.getLastRound().getStartedAt().toInstant(), Instant.now()).toMillis() > ROUND_TIME_IN_MILLIS;
+        if (currentTeam != null && currentTeam.getLastRound() != null) {
+            return Duration.between(currentTeam.getLastRound().getStartedAt().toInstant(), Instant.now()).toMillis() > ROUND_TIME_IN_MILLIS;
+        }
+        return false;
     }
 
     public Team getCurrentTeam() {
