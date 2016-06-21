@@ -7,8 +7,8 @@ import java.util.Date;
 import java.util.List;
 
 public class Game {
-    private static final int ROUND_TIME_IN_MILLIS = 60000;
-    private static final int POINTS_FOR_WIN = 30;
+    private static final int ROUND_TIME_IN_MILLIS = 5000;
+    private static final int POINTS_FOR_WIN = 10;
     private Team currentTeam;
     private Team[] teams;
 

@@ -85,8 +85,6 @@ public class AliasBot extends TelegramLongPollingBot {
                 game.addNewTeams(teamNames);
                 sendReadyForTeam(userId, game.getCurrentTeam().getName());
                 return;
-            } else {
-                //TODO
             }
         }
         if (COMMAND_GO.equalsIgnoreCase(messageText)) {
@@ -94,8 +92,8 @@ public class AliasBot extends TelegramLongPollingBot {
             if (game != null) {
                 game.startNewRound();
                 sendWord(userId);
+                return;
             }
-            return;
         }
         if (COMMAND_SKIP.equalsIgnoreCase(messageText)) {
             Game game = userToGame.get(userId);
@@ -108,8 +106,8 @@ public class AliasBot extends TelegramLongPollingBot {
                 } else {
                     sendTimeOver(userId);
                 }
+                return;
             }
-            return;
         }
         if (COMMAND_CORRECT.equalsIgnoreCase(messageText)) {
             Game game = userToGame.get(userId);
@@ -122,8 +120,8 @@ public class AliasBot extends TelegramLongPollingBot {
                 } else {
                     sendTimeOver(userId);
                 }
+                return;
             }
-            return;
         }
 
         if (COMMAND_NEXT_ROUND.equalsIgnoreCase(messageText)) {
@@ -135,9 +133,8 @@ public class AliasBot extends TelegramLongPollingBot {
                     game.changeTeam();
                     sendReadyForTeam(userId, game.getCurrentTeam().getName());
                 }
-
+                return;
             }
-            return;
         }
 
         if (COMMAND_FINISH_GAME.equalsIgnoreCase(messageText)) {
@@ -145,8 +142,8 @@ public class AliasBot extends TelegramLongPollingBot {
             if (game != null) {
                 userToGame.remove(userId);
                 sendStartGame(userId);
+                return;
             }
-            return;
         }
 
         sendStartGame(userId);
@@ -248,13 +245,13 @@ public class AliasBot extends TelegramLongPollingBot {
 
     private ReplyKeyboardMarkup getReplyKeyboardMarkup() {
         KeyboardRow keyboardRow = new KeyboardRow();
-        keyboardRow.add("1");
         keyboardRow.add("2");
         keyboardRow.add("3");
+        keyboardRow.add("4");
         KeyboardRow keyboardRow2 = new KeyboardRow();
-        keyboardRow2.add("4");
         keyboardRow2.add("5");
         keyboardRow2.add("6");
+        keyboardRow2.add("7");
 
         return getKeyBoardMarkup(Arrays.asList(keyboardRow, keyboardRow2));
     }
