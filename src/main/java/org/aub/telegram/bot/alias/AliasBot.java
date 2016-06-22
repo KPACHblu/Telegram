@@ -25,6 +25,7 @@ public class AliasBot extends TelegramLongPollingBot {
     private String COMMAND_CORRECT;
     private String COMMAND_NEXT_ROUND;
     private String COMMAND_FINISH_GAME;
+    private String COMMAND_HELP;
 
     private StatisticService statisticService = new StatisticService();
     private Map<Integer, Game> userToGame = new HashMap<>();
@@ -61,11 +62,18 @@ public class AliasBot extends TelegramLongPollingBot {
         COMMAND_CORRECT = lang.getProperty("button.correct");
         COMMAND_NEXT_ROUND = lang.getProperty("button.nextRound");
         COMMAND_FINISH_GAME = lang.getProperty("button.finishGame");
+        COMMAND_HELP = lang.getProperty("menu.helpCommand");
     }
 
     private void sendSome(Update update) {
         String messageText = update.getMessage().getText();
         Integer userId = update.getMessage().getFrom().getId();
+
+        if (COMMAND_HELP.equalsIgnoreCase(messageText)) {
+            String description = lang.getProperty("bot.description");
+            sendMessage(description, userId, getStartGameKeyboardMarkup());
+            return;
+        }
         // Start new game
         if (COMMAND_START_GAME.equalsIgnoreCase(messageText)) {
             userToGame.put(userId, new Game());
